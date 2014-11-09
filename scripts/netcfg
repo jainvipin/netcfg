@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # Command: create network
     parser_create = subparsers.add_parser('create', help='create a new network configuration')
     parser_create.add_argument('name', help='network name')
-    parser_create.add_argument('type', choices=['bridge'], help='network type')
+    parser_create.add_argument('type', choices=['bridge', 'ovs-bridge'], help='network type')
     parser_create.add_argument(
         '--destroy-on-stop',
         action='store_true',

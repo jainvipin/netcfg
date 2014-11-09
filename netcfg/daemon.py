@@ -187,6 +187,7 @@ class Daemon(object):
                 network_type = msg['type']
                 base_cfg = msg.get('config', {})
                 base_cfg['name'] = msg['name']
+                base_cfg['net_type'] = msg['type']
                 base_cfg['destroy_on_stop'] = msg['destroy_on_stop']
 
                 try:

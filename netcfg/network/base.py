@@ -12,7 +12,7 @@ class Network(object):
     Base class for network implementations.
     """
 
-    def __init__(self, name, destroy_on_stop=False):
+    def __init__(self, name, net_type, destroy_on_stop=False):
         """
         Class constructor.
 
@@ -20,6 +20,7 @@ class Network(object):
         """
 
         self.name = name
+        self.net_type = net_type
         self.destroy_on_stop = destroy_on_stop
         self.containers = set()
 
@@ -31,7 +32,7 @@ class Network(object):
 
         return {
             'name': self.name,
-            'type': self.get_type(),
+            'type': self.net_type,
             'destroy_on_stop': self.destroy_on_stop,
         }
 
@@ -46,6 +47,7 @@ class Network(object):
 
         return {
             'name': data['name'],
+            'net_type': data['type'],
             'destroy_on_stop': data['destroy_on_stop'],
         }
 

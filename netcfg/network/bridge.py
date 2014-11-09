@@ -14,7 +14,7 @@ class BridgeNetwork(base.Network):
     Bridged network implementation.
     """
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, net_type, **kwargs):
         """
         Class constructor.
         """
@@ -22,7 +22,7 @@ class BridgeNetwork(base.Network):
         if len(name) > 15:
             raise base.NetworkConfigurationError('Bridge network name can be at most 15 characters long!')
 
-        super(BridgeNetwork, self).__init__(name, **kwargs)
+        super(BridgeNetwork, self).__init__(name, net_type, **kwargs)
 
     def __repr__(self):
         return '<BridgeNetwork \'%s\'>' % self.name
@@ -33,6 +33,9 @@ class BridgeNetwork(base.Network):
         """
 
         return 'bridge'
+
+    def is_br_ovs(self):
+        return self.net_type  == 'ovs-bridge'
 
     def validate(self, netcfg):
         """
@@ -74,11 +77,15 @@ class BridgeNetwork(base.Network):
             # Create a bridge if one does not yet exist
             if not os.path.isdir(os.path.join('/sys/class/net', self.name)):
                 try:
-                    self.execute('ip link add dev %s type bridge' % self.name)
-                    self.execute('ip link set %s up' % self.name)
+                    if self.is_br_ovs():
+                        self.execute('ovs-vsctl add-br %s' % self.name)
+                    else:
+                        self.execute('ip link add dev %s type bridge' % self.name)
+                        self.execute('ip link set %s up' % self.name)
                 except subprocess.CalledProcessError:
                     logger.error("Failed to create bridge '%s'!" % self.name)
-                    self.execute('ip link delete %s' % self.name, errors=False)
+                    if is_br_linux():
+                        self.execute('ip link delete %s' % self.name, errors=False)
                     return
 
             with self.network_namespace(container) as netns:
@@ -100,12 +107,18 @@ class BridgeNetwork(base.Network):
 
                 # Join host interface to the bridge and bring it up
                 try:
-                    self.execute('ip link set %s master %s' % (veth_host, self.name))
+                    if self.is_br_ovs():
+                        self.execute('ovs-vsctl add-port %s %s ' % (self.name, veth_host))
+                    else:
+                        self.execute('ip link set %s master %s' % (veth_host, self.name))
                     self.execute('ip link set %s up' % veth_host)
                 except subprocess.CalledProcessError:
                     logger.error("Failed to join host interface '%s' into bridge '%s'!" % (
                         veth_host, self.name))
-                    self.execute('ip link delete dev %s' % veth_host, errors=False)
+                    if self.is_br_ovs():
+                        self.execute('ovs-vsctl del-port %s' % veth_host, errors=False)
+                    else:
+                        self.execute('ip link delete dev %s' % veth_host, errors=False)
                     return
 
                 # Move guest interface into the container namespace and rename it

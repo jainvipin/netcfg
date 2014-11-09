@@ -9,7 +9,8 @@ def get_class_for_type(network_type):
     :param network_type: Network type string
     """
 
-    if network_type == 'bridge':
+    if network_type == 'bridge' or network_type == 'ovs-bridge':
         return bridge.BridgeNetwork
+
 
     raise ValueError("Network type '%s' is not supported." % network_type)
