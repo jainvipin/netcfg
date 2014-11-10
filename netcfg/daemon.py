@@ -49,7 +49,7 @@ class DockerSubscriber(threading.Thread):
                 # Forward all events to the main thread
                 for event in self.client.events():
                     event = json.loads(event)
-                    if event['status'] not in ('start', 'stop'):
+                    if event['status'] not in ('start', 'stop', 'die'):
                         continue
 
                     event['container'] = self.client.inspect_container(event['id'])
@@ -160,7 +160,7 @@ class Daemon(object):
 
         if status == 'start':
             container.apply()
-        elif status == 'stop':
+        elif status == 'stop' or status == 'die':
             container.apply(detach=True)
 
     def process_rpc(self, msg):

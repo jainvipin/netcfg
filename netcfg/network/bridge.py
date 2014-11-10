@@ -71,6 +71,10 @@ class BridgeNetwork(base.Network):
 
         if detach:
             logger.info("Detaching network configuration '%s' from container '%s'." % (self.name, container.name))
+            if self.is_br_ovs():
+                veth_id = hashlib.md5(container.name + self.name).hexdigest()
+                veth_host = 've%s1' % veth_id[:7]
+                self.execute('ovs-vsctl del-port %s %s ' % (self.name, veth_host))
         else:
             logger.info("Applying network configuration '%s' to container '%s'." % (self.name, container.name))
 
@@ -89,7 +93,7 @@ class BridgeNetwork(base.Network):
                     return
 
             with self.network_namespace(container) as netns:
-                veth_id = hashlib.md5(container.name + self.name + netns).hexdigest()
+                veth_id = hashlib.md5(container.name + self.name).hexdigest()
                 veth_host = 've%s1' % veth_id[:7]
                 veth_guest = 've%s2' % veth_id[:7]
 
