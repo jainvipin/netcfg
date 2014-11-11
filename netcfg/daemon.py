@@ -219,6 +219,8 @@ class Daemon(object):
                 except KeyError:
                     raise ErrorResponse('Network does not exist.')
 
+                except net.net_type != 'ovs-bridge' or msg['vlan'] != None: 
+                    raise ErrorResponse('vlans not supported on non-ovs network')
                 # Obtain or create the container
                 container = self.config.add_container(container_id)
                 try:

@@ -112,7 +112,10 @@ class BridgeNetwork(base.Network):
                 # Join host interface to the bridge and bring it up
                 try:
                     if self.is_br_ovs():
-                        self.execute('ovs-vsctl add-port %s %s ' % (self.name, veth_host))
+                        ovs_cmd = 'ovs-vsctl add-port ' + self.name + ' ' + veth_host
+                        if netcfg.get('vlan', None):
+                            ovs_cmd = ovs_cmd + ' tag=' + netcfg.get('vlan', None)
+                        self.execute(ovs_cmd)
                     else:
                         self.execute('ip link set %s master %s' % (veth_host, self.name))
                     self.execute('ip link set %s up' % veth_host)

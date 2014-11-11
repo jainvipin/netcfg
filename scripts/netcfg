@@ -53,6 +53,11 @@ if __name__ == '__main__':
         action='append',
         help='add address configuration (may be specified multiple times to add multiple addresses)',
     )
+    parser_attach.add_argument(
+        '--vlan',
+        action='store',
+        help='specify a vlan/vxlan id associated with the network',
+    )
     parser_attach.set_defaults(cmd='attach')
 
     # Command: detach container from network
@@ -101,7 +106,7 @@ if __name__ == '__main__':
         if args.cmd == 'create':
             rsp = cli.create_network(args.type, args.name, destroy_on_stop=args.destroy_on_stop)
         elif args.cmd == 'attach':
-            rsp = cli.attach(args.container, args.network, address=args.address)
+            rsp = cli.attach(args.container, args.network, address=args.address, vlan=args.vlan)
         elif args.cmd == 'detach':
             rsp = cli.detach(args.container, args.network)
         elif args.cmd == 'show':
